@@ -12,5 +12,8 @@ cache:
 env:
   - ARCH=x86_64
   - ARCH=arm
+  - ARCH=armv6h
+  - ARCH=armv7h
+  - ARCH=armv8
 script:
   - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH rootfs/$ARCH
