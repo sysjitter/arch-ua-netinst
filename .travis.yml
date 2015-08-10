@@ -1,4 +1,7 @@
+env:
+  - ARCH=x86_64
+  - ARCH=arm
 language: c
 sudo: false
 script:
-  - bash arch-bootstrap.sh archlinux
+  - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH archlinux/$ARCH
