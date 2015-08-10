@@ -61,29 +61,26 @@ uncompress() {
 ###
 get_default_repo() {
   local ARCH=$1
-  if [[ x"$ARCH" != xarm ]]; then
-    echo $DEFAULT_REPO_URL
-  else
-    echo $DEFAULT_ARM_REPO_URL
-  fi
+  case "$ARCH" in
+    arm*) echo $DEFAULT_ARM_REPO_URL;;
+    *) echo $DEFAULT_REPO_URL;;
+  esac
 }
 
 get_core_repo_url() {
   local REPO_URL=$1 ARCH=$2
-  if [[ x"$ARCH" != xarm ]]; then
-    echo "${REPO_URL%/}/core/os/$ARCH"
-  else
-    echo "${REPO_URL%/}/$ARCH/core"
-  fi
+  case "$ARCH" in
+    arm*) echo "${REPO_URL%/}/$ARCH/core";;
+    *) echo "${REPO_URL%/}/core/os/$ARCH";;
+  esac
 }
 
 get_template_repo_url() {
   local REPO_URL=$1 ARCH=$2
-  if [[ x"$ARCH" != xarm ]]; then
-    echo "${REPO_URL%/}/\$repo/os/$ARCH"
-  else
-    echo "${REPO_URL%/}/$ARCH"
-  fi
+  case "$ARCH" in
+    arm*) echo "${REPO_URL%/}/$ARCH";;
+    *) echo "${REPO_URL%/}/\$repo/os/$ARCH";;
+  esac
 }
 
 configure_pacman() {
@@ -152,7 +149,7 @@ install_packages() {
 }
 
 show_usage() {
-  stderr "Usage: $(basename "$0") [-q] [-a i686|x86_64|arm] [-r REPO_URL] [-d DOWNLOAD_DIR] DESTDIR"
+  stderr "Usage: $(basename "$0") [-q] [-a i686|x86_64|arm|armv6h|armv7h|armv8] [-r REPO_URL] [-d DOWNLOAD_DIR] DESTDIR"
 }
 
 main() {
