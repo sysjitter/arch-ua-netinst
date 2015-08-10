@@ -1,7 +1,16 @@
 language: c
 sudo: false
+addons:
+  apt:
+    packages:
+      - qemu-user-static
+      - proot
+cache:
+  directories:
+    - packages
+    - rootfs
 env:
   - ARCH=x86_64
   - ARCH=arm
 script:
-  - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH archlinux/$ARCH
+  - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH rootfs/$ARCH
