@@ -3,7 +3,7 @@ addons:
   apt:
     packages:
       - qemu-user-static
-      - proot
+      - binfmt-support
 cache:
   directories:
     - packages
@@ -15,4 +15,4 @@ env:
   - ARCH=armv7h
   - ARCH=aarch64
 script:
-  - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH rootfs/$ARCH
+  - sudo bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH rootfs/$ARCH
