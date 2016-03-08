@@ -1,5 +1,4 @@
 language: c
-sudo: false
 addons:
   apt:
     packages:
@@ -14,6 +13,6 @@ env:
   - ARCH=arm
   - ARCH=armv6h
   - ARCH=armv7h
-  - ARCH=armv8
+  - ARCH=aarch64
 script:
   - bash arch-bootstrap.sh -a $ARCH -d packages/$ARCH rootfs/$ARCH
