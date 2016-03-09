@@ -44,15 +44,15 @@ extract_href() {
 }
 
 fetch() {
-  curl -s "$@"
+  curl -L -s "$@"
 }
 
 uncompress() {
   local FILEPATH=$1 DEST=$2
   
   case "$FILEPATH" in
-    *.gz) tar xzf "$FILEPATH" -C "$DEST";;
-    *.xz) xz -dc "$FILEPATH" | tar x -C "$DEST";;
+    *.gz) bsdtar xzf "$FILEPATH" -C "$DEST";;
+    *.xz) bsdtar xJf "$FILEPATH" -C "$DEST";;
     *) debug "Error: unknown package format: $FILEPATH"
        return 1;;
   esac
@@ -135,7 +135,9 @@ install_pacman_packages() {
 
 configure_static_qemu() {
   local ARCH=$1 DEST=$2
-  QEMU_STATIC_BIN=$(which qemu-$ARCH-static || echo )
+  case "$ARCH" in
+    arm*) QEMU_STATIC_BIN=$(which qemu-arm-static || echo );;
+  esac
   [[ -e "$QEMU_STATIC_BIN" ]] ||\
     { debug "no static qemu for $ARCH, ignoring"; return 0; }
   cp "$QEMU_STATIC_BIN" "$DEST/usr/bin"
