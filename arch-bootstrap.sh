@@ -28,8 +28,8 @@ PACMAN_PACKAGES=(
 )
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
-DEFAULT_REPO_URL="http://mirrors.kernel.org/archlinux"
-DEFAULT_ARM_REPO_URL="http://mirror.archlinuxarm.org"
+DEFAULT_REPO_URL="https://mirrors.kernel.org/archlinux"
+DEFAULT_ARM_REPO_URL="https://archlinuxarm.org"
 
 stderr() { 
   echo "$@" >&2 
@@ -105,8 +105,8 @@ configure_minimal_system() {
   test -e "$DEST/dev/random" || mknod -m 0644 "$DEST/dev/random" c 1 8
   test -e "$DEST/dev/urandom" || mknod -m 0644 "$DEST/dev/urandom" c 1 9
   
-  sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$DEST/etc/pacman.conf"
-  sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$DEST/etc/pacman.conf"
+  #sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$DEST/etc/pacman.conf"
+  #sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$DEST/etc/pacman.conf"
 }
 
 fetch_packages_list() {
@@ -175,7 +175,7 @@ main() {
   test $# -eq 1 || { show_usage; return 1; }
   
   [[ -z "$ARCH" ]] && ARCH=$(uname -m)
-  [[ -z "$REPO_URL" ]] &&REPO_URL=$(get_default_repo "$ARCH")
+  [[ -z "$REPO_URL" ]] && REPO_URL=$(get_default_repo "$ARCH")
   
   local DEST=$1
   local REPO=$(get_core_repo_url "$REPO_URL" "$ARCH")
@@ -188,6 +188,7 @@ main() {
   
   # Fetch packages, install system and do a minimal configuration
   mkdir -p "$DEST"
+  [[ "$ARCH" =~ ^arm.* ]] && BASIC_PACKAGES=(${BASIC_PACKAGES[*]} archlinuxarm-keyring)
   local LIST=$(fetch_packages_list $REPO)
   install_pacman_packages "${BASIC_PACKAGES[*]}" "$DEST" "$LIST" "$DOWNLOAD_DIR"
   configure_pacman "$DEST" "$ARCH"
