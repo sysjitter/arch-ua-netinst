@@ -1,11 +1,13 @@
 language: generic
 sudo: required
 dist: trusty
-addons:
-  apt:
-    packages:
-      - qemu-user-static
-      - binfmt-support
+notifications:
+  email: false
+before_install:
+  - sudo apt-get -qq update
+  - DEBIAN_FRONTEND=noninteractive sudo apt-get -qq -y dist-upgrade
+  - sudo apt-get install -y qemu-user-static
+  - sudo apt-get install -y bsdtar
 cache:
   directories:
     - packages

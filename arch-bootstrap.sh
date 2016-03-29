@@ -28,8 +28,8 @@ PACMAN_PACKAGES=(
 )
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
-DEFAULT_REPO_URL="http://mirrors.kernel.org/archlinux"
-DEFAULT_ARM_REPO_URL="http://mirror.archlinuxarm.org"
+DEFAULT_REPO_URL="https://mirrors.kernel.org/archlinux"
+DEFAULT_ARM_REPO_URL="https://archlinuxarm.org"
 
 stderr() { 
   echo "$@" >&2 
@@ -44,15 +44,15 @@ extract_href() {
 }
 
 fetch() {
-  curl -s "$@"
+  curl -L -s "$@"
 }
 
 uncompress() {
   local FILEPATH=$1 DEST=$2
   
   case "$FILEPATH" in
-    *.gz) tar xzf "$FILEPATH" -C "$DEST";;
-    *.xz) xz -dc "$FILEPATH" | tar x -C "$DEST";;
+    *.gz) bsdtar xzf "$FILEPATH" -C "$DEST";;
+    *.xz) bsdtar xJf "$FILEPATH" -C "$DEST";;
     *) debug "Error: unknown package format: $FILEPATH"
        return 1;;
   esac
@@ -105,8 +105,8 @@ configure_minimal_system() {
   test -e "$DEST/dev/random" || mknod -m 0644 "$DEST/dev/random" c 1 8
   test -e "$DEST/dev/urandom" || mknod -m 0644 "$DEST/dev/urandom" c 1 9
   
-  sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$DEST/etc/pacman.conf"
-  sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$DEST/etc/pacman.conf"
+  #sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$DEST/etc/pacman.conf"
+  #sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$DEST/etc/pacman.conf"
 }
 
 fetch_packages_list() {
@@ -135,7 +135,9 @@ install_pacman_packages() {
 
 configure_static_qemu() {
   local ARCH=$1 DEST=$2
-  QEMU_STATIC_BIN=$(which qemu-$ARCH-static || echo )
+  case "$ARCH" in
+    arm*) QEMU_STATIC_BIN=$(which qemu-arm-static || echo );;
+  esac
   [[ -e "$QEMU_STATIC_BIN" ]] ||\
     { debug "no static qemu for $ARCH, ignoring"; return 0; }
   cp "$QEMU_STATIC_BIN" "$DEST/usr/bin"
@@ -173,7 +175,7 @@ main() {
   test $# -eq 1 || { show_usage; return 1; }
   
   [[ -z "$ARCH" ]] && ARCH=$(uname -m)
-  [[ -z "$REPO_URL" ]] &&REPO_URL=$(get_default_repo "$ARCH")
+  [[ -z "$REPO_URL" ]] && REPO_URL=$(get_default_repo "$ARCH")
   
   local DEST=$1
   local REPO=$(get_core_repo_url "$REPO_URL" "$ARCH")
@@ -186,6 +188,7 @@ main() {
   
   # Fetch packages, install system and do a minimal configuration
   mkdir -p "$DEST"
+  [[ "$ARCH" =~ ^arm.* ]] && BASIC_PACKAGES=(${BASIC_PACKAGES[*]} archlinuxarm-keyring)
   local LIST=$(fetch_packages_list $REPO)
   install_pacman_packages "${BASIC_PACKAGES[*]}" "$DEST" "$LIST" "$DOWNLOAD_DIR"
   configure_pacman "$DEST" "$ARCH"
