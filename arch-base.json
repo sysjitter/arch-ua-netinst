@@ -1,0 +1,164 @@
+{
+  "builders": [
+    {
+      "boot_command": [
+        "<enter><wait10><wait5>",
+        "",
+        "sed -i 's/#PermitEmptyPasswords no/PermitEmptyPasswords yes/' /etc/ssh/sshd_config <enter>",
+        "systemctl restart sshd.service <enter>"
+      ],
+      "boot_wait": "45s",
+      "guest_os_type": "ArchLinux_64",
+      "headless": false,
+      "hard_drive_interface": "sata",
+      "iso_interface": "sata",
+      "iso_checksum": "6cab3efe08e39d9e8160322d64871ecfcf79103eee0df3b482f0226e4f2139b2",
+      "iso_checksum_type": "sha256",
+      "iso_url": "https://mirror.rackspace.com/archlinux/iso/2016.03.01/archlinux-2016.03.01-dual.iso",
+      "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now",
+      "ssh_password": "",
+      "ssh_username": "root",
+      "ssh_wait_timeout": "50000s",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "storagectl",
+          "{{.Name}}",
+          "--name",
+          "IDE Controller",
+          "--remove"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--firmware",
+          "efi"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--rtcuseutc",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpuhotplug",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--chipset",
+          "ich9"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--hpet",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--hwvirtex",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nestedpaging",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--largepages",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--vtxux",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--vtxvpid",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--vtxux",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--ioapic",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--paravirtprovider",
+          "kvm"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nictype1",
+          "virtio"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--natdnsproxy1",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--natdnshostresolver1",
+          "on"
+        ]
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "compression_level": 8,
+      "output": "boxes/arch-base.box",
+      "type": "vagrant"
+    }
+  ],
+  "provisioners": [
+    {
+      "scripts": [
+        "scripts/base.sh"
+      ],
+      "type": "shell"
+    },
+    {
+      "destination": "/mnt/home/vagrant/.ssh/authorized_keys",
+      "source": "keys/vagrant.pub",
+      "type": "file"
+    }
+  ],
+  "variables": {}
+}
+
