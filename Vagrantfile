@@ -52,6 +52,7 @@ Vagrant.configure(2) do |config|
   ## Virtualization - Oracle VirtualBox
   config.vm.provider :virtualbox do |vb|
     # https://www.virtualbox.org/manual/ch08.html#vboxmanage-modifyvm
+    vb.customize ["modifyvm", :id, "--firmware", "efi"]
     vb.customize ["modifyvm", :id, "--memory", 2048]
     vb.customize ["modifyvm", :id, "--cpuhotplug", "on"]
     vb.customize ["modifyvm", :id, "--cpus", 2]
