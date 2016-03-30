@@ -1,3 +1,6 @@
 [submodule "arch-install-scripts"]
 	path = arch-install-scripts
 	url = https://projects.archlinux.org/git/arch-install-scripts.git
+[submodule "devtools"]
+	path = devtools
+	url = https://projects.archlinux.org/git/devtools.git
