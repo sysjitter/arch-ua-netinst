@@ -4,10 +4,8 @@ dist: trusty
 notifications:
   email: false
 before_install:
-  - sudo apt-get -qq update
-  - DEBIAN_FRONTEND=noninteractive sudo apt-get -qq -y dist-upgrade
-  - sudo apt-get install -y qemu-user-static
-  - sudo apt-get install -y bsdtar
+  - DEBIAN_FRONTEND=noninteractive sudo apt-get install -y qemu-user-static
+  - DEBIAN_FRONTEND=noninteractive sudo apt-get install -y bsdtar
 cache:
   directories:
     - packages
