@@ -27,7 +27,7 @@ acl archlinux-keyring attr bzip2 curl e2fsprogs expat gcc-libs glibc gpgme keyut
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
 DEFAULT_REPO_URL="https://mirrors.kernel.org/archlinux"
-DEFAULT_ARM_REPO_URL="https://archlinuxarm.org"
+DEFAULT_ARM_REPO_URL="http://mirror.archlinuxarm.org"
 
 stderr() {
   echo "$@" >&2
