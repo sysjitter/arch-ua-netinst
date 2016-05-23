@@ -26,7 +26,7 @@ acl archlinux-keyring attr bzip2 curl e2fsprogs expat gcc-libs glibc gpgme keyut
 )
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
-DEFAULT_REPO_URL="https://mirrors.kernel.org/archlinux"
+DEFAULT_REPO_URL="http://mirrors.kernel.org/archlinux"
 DEFAULT_ARM_REPO_URL="http://mirror.archlinuxarm.org"
 
 stderr() {
@@ -76,35 +76,17 @@ get_core_repo_url() {
 get_template_repo_url() {
   local REPO_URL=$1 ARCH=$2
   case "$ARCH" in
-    arm*) echo "${REPO_URL%/}/$ARCH";;
-    *) echo "${REPO_URL%/}/\$repo/os/$ARCH";;
+    arm*) echo "${REPO_URL%/}/\$arch/\$repo";;
+    *) echo "${REPO_URL%/}/\$repo/os/\$arch";;
   esac
 }
 
 configure_pacman() {
   local DEST=$1 ARCH=$2
-  debug "configure DNS and pacman"
-  cp "/etc/resolv.conf" "$DEST/etc/resolv.conf"
+  debug "configure resolv and mirrors"
+  ln -sf /run/resolvconf/resolv.conf ${DEST}/etc/resolv.conf
   SERVER=$(get_template_repo_url "$REPO_URL" "$ARCH")
-  echo "Server = $SERVER" >> "$DEST/etc/pacman.d/mirrorlist"
-}
-
-configure_minimal_system() {
-  local DEST=$1
-
-  mkdir -p "$DEST/dev"
-  echo "root:x:0:0:root:/root:/bin/bash" > "$DEST/etc/passwd" 
-  echo 'root:$1$GT9AUpJe$oXANVIjIzcnmOpY07iaGi/:14657::::::' > "$DEST/etc/shadow"
-  touch "$DEST/etc/group"
-  echo "bootstrap" > "$DEST/etc/hostname"
-
-  test -e "$DEST/etc/mtab" || echo "rootfs / rootfs rw 0 0" > "$DEST/etc/mtab"
-  test -e "$DEST/dev/null" || mknod "$DEST/dev/null" c 1 3
-  test -e "$DEST/dev/random" || mknod -m 0644 "$DEST/dev/random" c 1 8
-  test -e "$DEST/dev/urandom" || mknod -m 0644 "$DEST/dev/urandom" c 1 9
-
-  #sed -i "s/^[[:space:]]*\(CheckSpace\)/# \1/" "$DEST/etc/pacman.conf"
-  #sed -i "s/^[[:space:]]*SigLevel[[:space:]]*=.*$/SigLevel = Never/" "$DEST/etc/pacman.conf"
+  echo "Server = $SERVER" > "$DEST/etc/pacman.d/mirrorlist"
 }
 
 fetch_packages_list() {
@@ -136,24 +118,29 @@ install_pacman_packages() {
 }
 
 configure_static_qemu() {
-  local ARCH=$1 DEST=$2
+  local ARCH=$1
   case "$ARCH" in
     arm*) QEMU_STATIC_BIN=$(which qemu-arm-static || echo );;
   esac
   [[ -e "$QEMU_STATIC_BIN" ]] ||\
     { debug "no static qemu for $ARCH, ignoring"; return 0; }
-  cp "$QEMU_STATIC_BIN" "$DEST/usr/bin"
 }
 
-install_packages() {
-  local ARCH=$1 DEST=$2 PACKAGES=$3
-  debug "install packages: $PACKAGES"
-  LC_ALL=C chroot "$DEST" /usr/bin/pacman-key --init
-  LC_ALL=C chroot "$DEST" /usr/bin/pacman-key --populate archlinux
-  [[ "$ARCH" =~ ^arm.* ]] && LC_ALL=C chroot "$DEST" /usr/bin/pacman-key --populate archlinuxarm
-  LC_ALL=C chroot "$DEST" /usr/bin/pacman-key --refresh-keys
-  LC_ALL=C chroot "$DEST" /usr/bin/pacman \
-    --noconfirm --arch $ARCH -Sy --force $PACKAGES
+install_pacman_base() {
+  local ARCH=$1 DEST=$2
+  debug "install pacman base group"
+  SYSTEMD_BIND="--bind /run/resolvconf"
+  [[ "$ARCH" =~ ^arm.* ]] && SYSTEMD_BIND="$SYSTEMD_BIND --bind $QEMU_STATIC_BIN"
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman --noconfirm -Syu --force base
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman-key --init
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman-key --populate archlinux
+  [[ "$ARCH" =~ ^arm.* ]] && systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman-key --populate archlinuxarm
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman-key --refresh-keys
 }
 
 show_usage() {
@@ -196,12 +183,10 @@ main() {
   mkdir -p "$DEST"
   [[ "$ARCH" =~ ^arm.* ]] && BASIC_PACKAGES=(${BASIC_PACKAGES[*]} archlinuxarm-keyring)
   local LIST=$(fetch_packages_list $REPO)
-  install_pacman_packages "${BASIC_PACKAGES[*]}" "$DEST" "$LIST" "$DOWNLOAD_DIR"
+  install_pacman_packages "${BASIC_PACKAGES[*]} ${EXTRA_PACKAGES[*]}" "$DEST" "$LIST" "$DOWNLOAD_DIR"
   configure_pacman "$DEST" "$ARCH"
-  configure_minimal_system "$DEST"
-  [[ -n "$USE_QEMU" ]] && configure_static_qemu "$ARCH" "$DEST"
-  install_packages "$ARCH" "$DEST" "${BASIC_PACKAGES[*]} ${EXTRA_PACKAGES[*]}"
-  configure_pacman "$DEST" "$ARCH" # Pacman must be re-configured
+  [[ -n "$USE_QEMU" ]] && configure_static_qemu "$ARCH"
+  install_pacman_base "$ARCH" "$DEST"
   [[ "$DOWNLOAD_DIR" ]] && rm -rf "$DOWNLOAD_DIR"
 
   debug "done"
