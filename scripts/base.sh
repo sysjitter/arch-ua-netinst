@@ -34,13 +34,25 @@ echo LANG=en_US.UTF-8 > /etc/locale.conf
 echo 'Set the HW Clock'
 hwclock --systohc --utc
 
-echo 'Ensure dhcpcd starts on boot'
-systemctl enable dhcpcd.service
+echo 'Enable systemd-networkd'
+systemctl enable systemd-networkd
 
-echo 'Update and refresh Arch keys'
+echo 'Enable systemd-resolved'
+systemctl enable systemd-resolved
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sed -i 's/dns/resolve/' /etc/nsswitch.conf
+
+echo 'Enable DHCP on all network interfaces'
+cat <<CONF>/etc/systemd/network/wired.network
+[Network]
+DHCP=yes
+CONF
+
+echo 'Update and refresh Arch keyrings'
 pacman-key --init
 pacman-key --populate archlinux
 pacman-key --refresh-keys
+sed -i 's/#RemoteFileSigLevel = Required/RemoteFileSigLevel = Required/' /etc/pacman.conf
 
 echo 'Create vagrant user'
 useradd -m -G wheel vagrant
