@@ -140,6 +140,8 @@ install_pacman_base() {
   [[ "$ARCH" =~ ^arm.* ]] && systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --populate archlinuxarm
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/sbin/sed -i 's/hkp:\/\/pool/hkps:\/\/hkps.pool/g' /etc/pacman.d/gnupg/gpg.conf
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --refresh-keys
 }
 
