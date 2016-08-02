@@ -23,6 +23,7 @@ set -e -u -o pipefail
 # Packages needed by pacman (see get-pacman-dependencies.sh)
 PACMAN_PACKAGES=(
 acl archlinux-keyring attr bzip2 curl e2fsprogs expat gcc-libs glibc gpgme keyutils krb5 libarchive libassuan libgpg-error libidn libssh2 lzo openssl pacman pacman-mirrorlist xz zlib lz4
+bzip2 gcc-libs glibc gmp gnutls libassuan libffi libgcrypt libgpg-error libksba libldap libsasl libtasn1 ncurses nettle npth openssl p11-kit readline sqlite zlib
 )
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
@@ -132,17 +133,17 @@ install_pacman_base() {
   SYSTEMD_BIND="--bind /run/resolvconf"
   [[ "$ARCH" =~ ^arm.* ]] && SYSTEMD_BIND="$SYSTEMD_BIND --bind $QEMU_STATIC_BIN"
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
-      /usr/bin/pacman --noconfirm -Syu --force base
-  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --init
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/sbin/sed -i 's/hkp:\/\/pool/hkps:\/\/hkps.pool/g' /etc/pacman.d/gnupg/gpg.conf
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --populate archlinux
   [[ "$ARCH" =~ ^arm.* ]] && systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --populate archlinuxarm
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
-      /usr/sbin/sed -i 's/hkp:\/\/pool/hkps:\/\/hkps.pool/g' /etc/pacman.d/gnupg/gpg.conf
-  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --refresh-keys
+  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman --noconfirm -Syu --force base
 }
 
 show_usage() {
