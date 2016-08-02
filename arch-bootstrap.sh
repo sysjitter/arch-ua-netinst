@@ -132,6 +132,8 @@ install_pacman_base() {
   debug "install pacman base group"
   SYSTEMD_BIND="--bind /run/resolvconf"
   [[ "$ARCH" =~ ^arm.* ]] && SYSTEMD_BIND="$SYSTEMD_BIND --bind $QEMU_STATIC_BIN"
+  [[ "$ARCH" =~ ^arm.* ]] && systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+      /usr/bin/pacman --noconfirm -Syu --force base
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --init
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
@@ -142,7 +144,7 @@ install_pacman_base() {
       /usr/bin/pacman-key --populate archlinuxarm
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --refresh-keys
-  systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
+  [[ "$ARCH" =~ ^arm.* ]] || systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman --noconfirm -Syu --force base
 }
 
