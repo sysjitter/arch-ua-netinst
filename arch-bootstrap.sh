@@ -23,7 +23,7 @@ set -e -u -o pipefail
 # Packages needed by pacman (see get-pacman-dependencies.sh)
 PACMAN_PACKAGES=(
 acl archlinux-keyring attr bzip2 curl e2fsprogs expat gcc-libs glibc gpgme keyutils krb5 libarchive libassuan libgpg-error libidn libssh2 lzo openssl pacman pacman-mirrorlist xz zlib lz4
-bzip2 gcc-libs glibc gmp gnutls libassuan libffi libgcrypt libgpg-error libksba libldap libsasl libtasn1 ncurses nettle npth openssl p11-kit readline sqlite zlib
+bzip2 gcc-libs glibc gmp gnutls gnupg libassuan libffi libgcrypt libgpg-error libksba libldap libsasl libtasn1 ncurses nettle npth openssl p11-kit readline sqlite zlib
 )
 BASIC_PACKAGES=(${PACMAN_PACKAGES[*]} filesystem)
 EXTRA_PACKAGES=(coreutils bash grep gawk file tar systemd sed)
