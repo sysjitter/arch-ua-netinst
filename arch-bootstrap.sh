@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # arch-bootstrap: Bootstrap a base Arch Linux system using any GNU distribution.
 #
@@ -142,8 +142,9 @@ install_pacman_base() {
       /usr/bin/pacman-key --populate archlinux
   [[ "$ARCH" =~ ^arm.* ]] && systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman-key --populate archlinuxarm
+  # dirmngr is broken between 2.1.18-1 and 2.1.20-1 so keyservers don't work
   systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
-      /usr/bin/pacman-key --refresh-keys
+      /bin/bash -c '[[ $(/usr/bin/vercmp $(/usr/bin/pacman -Q gnupg | awk "{print \$2}") 2.1.18-1) -lt 1 || $(/usr/bin/vercmp $(/usr/bin/pacman -Q gnupg | awk "{print \$2}") 2.1.20-1) -gt 0 ]]  && /usr/bin/pacman-key --refresh-keys' || true
   [[ "$ARCH" =~ ^arm.* ]] || systemd-nspawn -q $SYSTEMD_BIND -D "$DEST" \
       /usr/bin/pacman --noconfirm -Syu --force base
 }
