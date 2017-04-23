@@ -115,6 +115,9 @@ install_pacman_packages() {
       fetch -o "$FILEPATH.sig" "$REPO/${FILE}.sig"
     debug "uncompress package: $FILEPATH"
     uncompress "$FILEPATH" "$DEST"
+    # JHP I'm not sure why but under virtualbox there's a problem
+    # with rapid writes with bsdtar, this seems to solve it.
+    sleep 1
   done
 }
 
