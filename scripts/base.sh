@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -e -u 
+set -e -u
+echo 'Mirror selection'
+curl "https://www.archlinux.org/mirrorlist/?country=US&protocol=https&ip_version=4&ip_version=6&use_mirror_status=on" | sed 's/#Server/Server/g' > /etc/pacman.d/mirrorlist
+
 echo 'Partition drive.'
 parted -s /dev/sda mklabel gpt
 parted -s --align optimal /dev/sda mkpart ESP fat32 1MiB 100MiB
