@@ -77,17 +77,19 @@ cat <<CONF>/etc/systemd/network/wired.network
 DHCP=yes
 CONF
 
+echo 'Update and refresh Arch keyrings'
+# GnuPG bug
+touch /etc/pacman.d/gnupg/dirmngr_ldapservers.conf
+pacman-key --init
+pacman-key --populate archlinux
+pacman-key --refresh-keys
+sed -i 's/#RemoteFileSigLevel = Required/RemoteFileSigLevel = Required/' /etc/pacman.conf
+
 echo 'Use BTRFS subvolume for snapshots instead of Snapper defaults'
 pacman -S --noconfirm --needed --noprogressbar btrfs-progs snapper
 cp /etc/snapper/config-templates/default /etc/snapper/configs/root
 sed -i 's/SNAPPER_CONFIGS=""/SNAPPER_CONFIGS="root"/' /etc/conf.d/snapper
 systemctl enable snapper-boot.timer snapper-timeline.timer snapper-cleanup.timer
-
-echo 'Update and refresh Arch keyrings'
-pacman-key --init
-pacman-key --populate archlinux
-pacman-key --refresh-keys
-sed -i 's/#RemoteFileSigLevel = Required/RemoteFileSigLevel = Required/' /etc/pacman.conf
 
 echo 'Create vagrant user'
 useradd -m -G wheel vagrant
